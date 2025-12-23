@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BYE 2025 ! 我陪你一起倒數 | Only For You</title>
+  
+  <!-- iOS 桌面捷徑設定 -->
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3893/3893341.png">
+  <meta name="apple-mobile-web-app-title" content="聖誕倒數">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg, #d4c4b4 0%, #e8e0d8 70%, #ffffff 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 背景裝飾：聖誕樹 */
+    .bg-tree {
+      position: fixed;
+      bottom: 40px;
+      z-index: 1;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .tree-l { left: -30px; width: 150px; }
+    .tree-r { right: -30px; width: 180px; }
+
+    /* 底部積雪 */
+    .snow-ground {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: #fff;
+      border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+      z-index: 2;
+      box-shadow: 0 -5px 20px rgba(255,255,255,0.8);
+    }
+
+    .snowflake {
+      position: fixed;
+      color: rgba(255, 255, 255, 0.8);
+      animation: fall linear infinite;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10vh) rotate(0deg); }
+      100% { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      margin-top: 20px;
+      z-index: 10;
+    }
+
+    .title {
+      font-size: 24px;
+      color: #5a4f45;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-shadow: 1px 1px 0px #fff, 2px 2px 10px rgba(0,0,0,0.1);
+      text-transform: uppercase;
+      line-height: 1.4;
+    }
+
+    .snowman-container {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      aspect-ratio: 1 / 1.5;
+      margin: 0 auto;
+      z-index: 10;
+    }
+
+    .snowman-bg {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* 按鈕樣式 */
+    .day-button {
+      position: absolute;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 15;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5a4f45;
+      font-size: 18px;
+    }
+
+    /* 鎖定狀態 */
+    .day-button.locked {
+      opacity: 0.5;
+      filter: grayscale(0.7);
+      cursor: not-allowed;
+    }
+
+    .day-button:not(.locked):hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    .day-button.unopened {
+      background: linear-gradient(135deg, #f8f1ea 0%, #dcd0c4 100%);
+    }
+
+    .day-button.opened {
+      background: linear-gradient(135deg, #ff8fab 0%, #ff6b8f 100%);
+      color: white !important;
+    }
+
+    /* 按鈕佈局 */
+    .day-25 { top: -2%; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); background: linear-gradient(135deg, #fff3b0 0%, #ffd700 100%) !important; }
+    .day-26 { top: 28%; left: 5%; width: 65px; height: 65px; border-radius: 50%; }
+    .day-27 { top: 45%; left: 50%; transform: translateX(-50%); width: 95px; height: 48px; border-radius: 12px / 50%; background: linear-gradient(135deg, #a8e6cf 0%, #7fd3b0 100%) !important; border: 2px solid #5fb895; }
+    .day-28 { top: 28%; right: 5%; width: 65px; height: 65px; border-radius: 50%; }
+    .day-29 { top: 62%; left: 15%; width: 70px; height: 70px; border-radius: 40% 60%; }
+    .day-30 { top: 62%; right: 15%; width: 70px; height: 70px; border-radius: 60% 40%; }
+    .day-31 { top: 74%; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border-radius: 50%; }
+
+    /* 彈窗設計 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .modal.show { display: flex; }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 95vh;
+      overflow: hidden;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .modal-media-container { width: 100%; background: #1a1a1a; display: flex; flex-direction: column; overflow-y: auto; }
+    .photo-area { width: 100%; max-height: 300px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; }
+    .photo-area img { max-width: 100%; max-height: 300px; width: auto; height: auto; object-fit: contain; }
+    .video-area { width: 100%; background: #000; aspect-ratio: 16 / 9; display: none; }
+
+    .modal-info { padding: 20px; text-align: center; overflow-y: auto; flex-grow: 1; }
+    .modal-emoji { font-size: 32px; margin-bottom: 5px; }
+    .modal-title { font-size: 20px; color: #333; margin-bottom: 10px; font-weight: bold; }
+    .modal-text { font-size: 15px; color: #666; line-height: 1.6; white-space: pre-wrap; margin-bottom: 15px; }
+    .song-tag { display: inline-block; background: #fdf2f4; color: #ff6b8f; padding: 4px 14px; border-radius: 20px; font-size: 12px; margin-bottom: 10px; border: 1px solid #ffccd5; }
+
+    .modal-close { background: #ff6b8f; color: white; border: none; padding: 16px 0; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+    /* Toast 提示 */
+    #toast {
+      position: fixed;
+      bottom: 60px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 14px;
+      z-index: 2000;
+      display: none;
+      animation: toastIn 0.3s forwards;
+    }
+    @keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .footer { text-align: center; margin-top: 20px; margin-bottom: 30px; color: #5a4f45; z-index: 10; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div id="snowflakes"></div>
+  <div id="toast">美西時間還沒到這一天喔！🎁</div>
+  <div class="snow-ground"></div>
+
+  <div class="header">
+    <h1 class="title">BYE 2025 !<br>我陪你一起倒數</h1>
+  </div>
+
+  <div class="snowman-container">
+    <svg class="snowman-bg" viewBox="0 0 320 520" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#5a4f45" stroke-width="8" stroke-linecap="round" fill="none">
+        <path d="M65 330 C 30 310, 20 280, 10 260" /><path d="M25 295 L 5 285" />
+        <path d="M255 330 C 290 310, 300 280, 310 260" /><path d="M295 295 L 315 285" />
+      </g>
+      <circle cx="160" cy="360" r="120" fill="white" stroke="#e8e0d8" stroke-width="4"/>
+      <circle cx="160" cy="170" r="95" fill="white" stroke="#e8e0d8" stroke-width="4"/>
+      <circle cx="140" cy="145" r="7" fill="#333"/><circle cx="180" cy="145" r="7" fill="#333"/>
+      <polygon points="160,155 148,175 172,175" fill="#ff8c42"/>
+      <path d="M 135 185 Q 160 200 185 185" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <rect x="115" y="60" width="90" height="40" rx="5" fill="#5a4f45"/><rect x="125" y="45" width="70" height="25" rx="5" fill="#3d3832"/>
+      <circle cx="160" cy="280" r="6" fill="#5a4f45" opacity="0.6"/><circle cx="160" cy="310" r="6" fill="#5a4f45" opacity="0.6"/><circle cx="160" cy="340" r="6" fill="#5a4f45" opacity="0.6"/>
+    </svg>
+
+    <button class="day-button day-25 unopened" data-day="25">25</button>
+    <button class="day-button day-26 unopened" data-day="26">26</button>
+    <button class="day-button day-27 unopened" data-day="27">27</button>
+    <button class="day-button day-28 unopened" data-day="28">28</button>
+    <button class="day-button day-29 unopened" data-day="29">29</button>
+    <button class="day-button day-30 unopened" data-day="30">30</button>
+    <button class="day-button day-31 unopened" data-day="31">31</button>
+  </div>
+
+  <div class="footer">
+    <p>❄ 已解鎖驚喜 <span id="completedCount">0</span> / 7 ❄</p>
+    <p style="font-size: 10px; opacity: 0.6; margin-top: 5px;">Timezone: Phoenix, AZ (MST)</p>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-media-container">
+        <div class="photo-area" id="photoArea"></div>
+        <div class="video-area" id="videoArea"></div>
+      </div>
+      <div class="modal-info">
+        <div class="modal-emoji" id="modalEmoji"></div>
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <div id="songTag" class="song-tag"></div>
+        <div class="modal-text" id="modalText"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">關閉驚喜</button>
+    </div>
+  </div>
+
+  <script>
+    const surprises = {
+      25: { emoji: "🎅", title: "聖誕節快樂!", text: "親愛的修,這是我們的第一個聖誕節。\n\n雖然今年你不在身邊，但想到你快回來了就很開心～\n\n希望未來每個聖誕節都有你陪伴。❤️", image: "https://duk.tw/sx1eyH.png", songTitle: "Merry Christmas ", songUrl: "https://youtu.be/Q_yuO8UNGmY?si=rZ9W63Ld0XxhsDGq" },
+      26: { emoji: "💝", title: "愛的回憶", text: "今年一起去了好多地方玩！\n\n謝謝你精心策劃的美國之旅、也有屬於我們兩人的北海道回憶、還有跟朋友一起玩的瀨戶內海", image: "https://duk.tw/1dTo4F.jpg", songTitle: "HONNE - Location Unknown ◐ ", songUrl: "https://youtu.be/flLc6LmAG6c?si=m7Tf6riWAA6IeovQ" },
+      27: { emoji: "🎶", title: "給你的歌", text: "謝謝你常常打給我叫我起床，雖然我喜歡賴床，但我更喜歡你❤️", image: "https://duk.tw/k6if18.png", songTitle: "I love to sleep more than you", songUrl: "https://www.youtube.com/watch?v=BEmtc0mlI64" },
+      28: { emoji: "🙏", title: "感謝有你", text: "謝謝你今年為我做的一切。\n\n你的出現就是我最大的幸福。💕", image: "https://duk.tw/vSWGQ4.png", songTitle: "淺堤 Shallow Levée -【禮物 Blessing】", songUrl: "https://youtu.be/t9BA4O43E4o?si=DoZn5bwnbRfpfmGF" },
+      29: { emoji: "📷", title: "珍貴時刻", text: "希望我們最美好的回憶可以一直延續。", image: "https://duk.tw/7pztFM.jpg", songTitle: "我想和你一起", songUrl: "https://youtu.be/ltFNlTWDgU8?si=MJKouPIsWe8uIvsm" },
+      30: { emoji: "🎯", title: "明年計畫", text: "新的一年,我想和你一起:\n\n✈️ 去旅行到處玩\n🍜 一起吃吃喝喝\n 📸 Color date \n 💑 沒事膩在一起", image: "https://duk.tw/saGvmv.png", songTitle: "Cause all I want is you, is you ！It takes two.", songUrl: "https://youtu.be/IMsIvOjB3do?si=QQPKI647T_wyVu3g" },
+      31: { emoji: "🎆", title: "新年快樂", text: "跨年倒數了!\n\n願2026年我們一起創造更多美好回憶。\n\n永遠愛你 ♡", image: "https://duk.tw/NUCKML.jpg", songTitle: "See U next year", songUrl: "https://youtu.be/RguTnCmfpro?si=FxKv9mx2lzxHJwCN" }
+    };
+
+    // 獲取美西鳳凰城當前日期
+    function getPhoenixDay() {
+      const now = new Date();
+      // 使用 America/Phoenix 時區格式化日期
+      const phoenixString = now.toLocaleDateString("en-US", {
+        timeZone: "America/Phoenix",
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric'
+      });
+      const [m, d, y] = phoenixString.split('/');
+      return { month: parseInt(m), day: parseInt(d) };
+    }
+
+    function updateLocks() {
+      const phoenixDate = getPhoenixDay();
+      const currentMonth = phoenixDate.month;
+      const currentDay = phoenixDate.day;
+
+      document.querySelectorAll('.day-button').forEach(btn => {
+        const targetDay = parseInt(btn.dataset.day);
+        // 判斷是否開放：如果是 12 月且鳳凰城當天日期 >= 目標日期
+        if (currentMonth === 12 && currentDay >= targetDay) {
+          btn.classList.remove('locked');
+        } else {
+          btn.classList.add('locked');
+        }
+      });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2500);
+    }
+
+    function getYouTubeEmbedUrl(url) {
+      if (!url) return null;
+      let videoId = '';
+      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+      else if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+      else if (url.includes('embed/')) videoId = url.split('embed/')[1].split('?')[0];
+      return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0` : null;
+    }
+
+    let openedDoors = JSON.parse(localStorage.getItem('openedDoors') || '[]');
+
+    function init() {
+      updateLocks();
+      openedDoors.forEach(day => {
+        const btn = document.querySelector(`[data-day="${day}"]`);
+        if (btn) { btn.classList.remove('unopened'); btn.classList.add('opened'); }
+      });
+      updateCount();
+
+      // 雪花生成
+      const snowWrap = document.getElementById('snowflakes');
+      for (let i = 0; i < 40; i++) {
+        const s = document.createElement('div');
+        s.className = 'snowflake';
+        s.textContent = '❄';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.fontSize = (Math.random() * 10 + 10) + 'px';
+        s.style.animationDuration = (Math.random() * 5 + 7) + 's';
+        s.style.animationDelay = Math.random() * 5 + 's';
+        snowWrap.appendChild(s);
+      }
+    }
+
+    document.querySelectorAll('.day-button').forEach(btn => {
+      btn.addEventListener('click', function() {
+        if (this.classList.contains('locked')) {
+          showToast("鳳凰城時間還沒到這一天喔！🎁");
+          return;
+        }
+
+        const day = parseInt(this.dataset.day);
+        if (!openedDoors.includes(day)) {
+          openedDoors.push(day);
+          localStorage.setItem('openedDoors', JSON.stringify(openedDoors));
+          this.classList.remove('unopened');
+          this.classList.add('opened');
+          updateCount();
+        }
+        showModal(day);
+      });
+    });
+
+    function showModal(day) {
+      const data = surprises[day];
+      const photoArea = document.getElementById('photoArea');
+      const videoArea = document.getElementById('videoArea');
+      const songTag = document.getElementById('songTag');
+      
+      if (data.image) {
+        photoArea.innerHTML = `<img src="${data.image}" alt="Moment">`;
+        photoArea.style.display = 'flex';
+      } else { photoArea.style.display = 'none'; }
+      
+      const embedUrl = getYouTubeEmbedUrl(data.songUrl);
+      if (embedUrl) {
+        videoArea.innerHTML = `<iframe width="100%" height="100%" src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        videoArea.style.display = 'block';
+      } else { videoArea.style.display = 'none'; }
+
+      document.getElementById('modalEmoji').textContent = data.emoji;
+      document.getElementById('modalTitle').textContent = data.title;
+      document.getElementById('modalText').textContent = data.text;
+      
+      if (data.songTitle) {
+        songTag.style.display = 'inline-block';
+        songTag.textContent = '♪ ' + data.songTitle;
+      } else { songTag.style.display = 'none'; }
+
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+      document.getElementById('photoArea').innerHTML = ''; 
+      document.getElementById('videoArea').innerHTML = ''; 
+    }
+
+    function updateCount() {
+      document.getElementById('completedCount').textContent = openedDoors.length;
+    }
+
+    window.onclick = function(e) { if (e.target == document.getElementById('modal')) closeModal(); }
+    
+    // 每分鐘檢查一次鎖定狀態（防止跨日沒更新）
+    setInterval(updateLocks, 60000);
+    init();
+  </script>
+</body>
+</html>
